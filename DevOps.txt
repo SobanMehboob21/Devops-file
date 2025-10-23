@@ -1,0 +1,57 @@
+https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
+
+everything relted to network interface is in above lin
+Network Interface?
+a network interface is the point of connection between a computer and a network
+
+A network interface is just a connection point between your computer (or server) and a network (like the internet or a local network).
+
+Interface	What it means        	 	Example name in Linux
+🧵 Ethernet	Wired connection		    eth0, enp0s3
+📶 Wi-Fi	        Wireless connection	             		   wlan0
+🔁 Loopback	Internal (connects to itself)		lo
+🌐 Virtual	Used by virtual machines or Docker	docker0, veth1234
+
+
+
+ 1. Old Style (Classic names)
+
+Old Linux systems (before 2015) used short, easy names:
+
+Type	              Example name			Meaning
+Ethernet (wired)	eth0, eth1, eth2	First, second, third Ethernet port
+Wi-Fi (wireless)	wlan0, wlan1		First, second wireless card
+Loopback	 	lo		Always the internal “self” connection
+
+Example:
+If you plugged in two Ethernet cables, Linux would name them eth0 and eth1.
+
+✅ Simple, but...
+❌ Sometimes names changed randomly after reboot or hardware change — which caused server problems.
+
+
+
+2. New Style (Predictable names)
+
+To fix that, Linux introduced Predictable Network Interface Names around 2015.
+
+These names describe where the hardware is physically connected on the motherboard.
+
+Examples:
+
+New Name	Type			Meaning
+enp3s0	 	Ethernet	en = Ethernet, p3 = PCI bus 3, s0 = slot 0
+ens33		Ethernet	Ethernet, slot 33
+wlp2s0		Wi-Fi		wl = Wireless LAN, p2 = PCI bus 2, s0 = slot 0
+
+🧠 These names come from hardware location, not boot order —
+so they never change when you restart or plug new devices.
+
+
+
+
+
+
+
+
+
