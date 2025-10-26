@@ -1,4 +1,4 @@
-\https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
+\\\\https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
 
 everything relted to network interface is in above lin
 Network Interface?
@@ -778,13 +778,737 @@ Show first 10 logs	grep "Sent SMS" logs.txt | head -n 10	grep + head
 Show last 15 logs	grep "Sent SMS" logs.txt | tail -n 15	grep + tail
 Extract structured fields	complex awk command	awk
 
+------------------------------------------
+
+MONIT
+
+RANDOM:
+a.	Stat command, create files with old dates.
+b.	Monit (all tasks related to monit)
+i.	https://www.cyberciti.biz/faq/how-to-install-and-use-monit-on-ubuntudebian-linux-server/
+ii.	https://www.howtoforge.com/tutorial/server-monitoring-with-munin-and-monit-on-centos/2/
 
 
 
-\\\
+
+What is Monit?
+
+Monit is a Linux monitoring and self-healing tool.
+It’s like a watchdog sitting inside your system — constantly checking if things are working fine.
+If something breaks, Monit doesn’t just tell you — it fixes it automatically. 🔁
+
+Think of it this way:
+
+🧍 You = System admin
+⚙️ Monit = Assistant who checks if your services (like Nginx, MySQL, SSH, etc.) are alive every minute
+💥 If something crashes → Monit restarts it
+✉️ If it can’t fix it → Monit emails you an alert
+
+💡 2️⃣ Why Use Monit?
+
+Because in real-world servers:
+
+Services crash.
+
+Disk fills up.
+
+Processes hang.
+
+You can’t babysit every app 24/7.
+
+Monit automates that.
+It monitors, restarts, and alerts — all without your manual involvement.
+
+🧩 3️⃣ How Monit Works (Simple Concept)
+
+Monit runs a small background daemon that:
+
+Reads its configuration file (/etc/monit/monitrc or /etc/monit/conf.d/)
+
+Performs checks every X seconds (default: 30)
+
+Takes actions (start, stop, restart, alert) if conditions fail
+
+⚙️ 4️⃣ Real Example – Monitor & Restart Nginx
+
+Let’s say you want to make sure your Nginx web server never goes down.
+Here’s how Monit handles it 👇
+
+Config file:
+
+check process nginx with pidfile /run/nginx.pid
+    start program = "/usr/sbin/service nginx start"
+    stop program  = "/usr/sbin/service nginx stop"
+    if failed port 80 protocol http then restart
+    if 5 restarts within 5 cycles then timeout
+
+ Breakdown:
+
+check process nginx: tells Monit to watch the Nginx process
+
+with pidfile /run/nginx.pid: how Monit identifies it’s running
+
+start program: how to start it if it’s stopped
+
+stop program: how to stop it
+
+if failed port 80 ... then restart: if Nginx stops responding → restart it
+
+if 5 restarts ... then timeout: stop trying if it fails too often
+
+So basically:
+
+ Nginx stops working →  Monit restarts it automatically.
+
+ How to Install Monit
+
+For Ubuntu/Debian:
+
+sudo apt update
+sudo apt install monit -y
 
 
+For CentOS/RHEL:
+
+sudo yum install monit -y
+ Enable Web Dashboard (to see everything visually)
+
+Monit includes a small web UI.
+
+Open the main config:
+
+sudo nano /etc/monit/monitrc
 
 
+Uncomment and edit this section:
 
+set httpd port 2812 and
+    use address localhost  # or 0.0.0.0 if you want remote access
+    allow localhost        # or allow user:password
+
+
+Then restart Monit:
+
+sudo systemctl enable monit
+sudo systemctl start monit
+
+
+Now open your browser:
+http://localhost:2812
+
+You’ll see:
+
+CPU usage
+
+Memory
+
+Disk space
+
+Status of each monitored service
+
+Common Monit Commands
+Command	Description
+monit status	See full status of everything Monit watches
+monit summary	Short summary of all monitored services
+monit reload	Reload config after editing
+monit start nginx	Start a specific service
+monit stop nginx	Stop a specific service
+monit restart nginx	Restart that service
+monit quit	Stop the Monit daemon
+ Real-world Use Case (as a DevOps Engineer)
+
+You can use Monit to:
+
+Restart Nginx, MySQL, or Node.js if they crash
+
+Alert when disk usage > 90%
+
+Restart SSH if it hangs
+
+Monitor custom scripts or ports
+
+Track system metrics (CPU, RAM, load average)
+
+ Sample Advanced Check
+
+Monitor CPU load:
+
+check system myserver
+    if loadavg (1min) > 4 then alert
+    if memory usage > 90% then alert
+    if cpu usage (user) > 70% for 5 cycles then alert
+
+
+Monit will automatically email you alerts if these conditions trigger.
+
+ Summary
+Concept	Meaning
+Monit	Monitoring + Self-healing tool
+Goal	Keep services alive automatically
+Config location	/etc/monit/monitrc or /etc/monit/conf.d/
+Web UI	Port 2812
+Main Benefit	Monit restarts failed services instantly without you touching the server
+
+stat Command & Creating Files with Old Dates
+🧠 What It Does
+
+stat shows detailed info about a file — size, permissions, timestamps, etc.
+
+stat filename
+
+
+Example output:
+
+Access: 2025-10-26 11:30:12
+Modify: 2025-10-25 23:10:45
+Change: 2025-10-25 23:10:45
+
+🕒 To Create a File with an Old Date
+
+You can use touch with -t flag:
+
+touch -t 202309141200 oldfile.txt
+
+
+This sets the modified time to:
+
+September 14, 2023, 12:00 PM
+
+To verify:
+
+stat oldfile.txt
+
+🧠 B. MONIT (From the two articles)
+
+Those two tutorials teach how to install, configure, and use Monit on Ubuntu/Debian and CentOS.
+
+🔧 1️⃣ Install Monit
+
+Ubuntu/Debian:
+
+sudo apt update
+sudo apt install monit -y
+
+
+CentOS/RHEL:
+
+sudo yum install epel-release -y
+sudo yum install monit -y
+
+⚙️ 2️⃣ Start & Enable
+sudo systemctl enable monit
+sudo systemctl start monit
+
+🌐 3️⃣ Enable Web Interface
+
+Edit /etc/monit/monitrc:
+
+set httpd port 2812 and
+    use address localhost
+    allow localhost
+
+
+Restart:
+
+sudo systemctl restart monit
+
+
+Open browser → http://localhost:2812
+
+💼 4️⃣ Add Monit Checks
+
+Example 1: Monitor Nginx
+
+check process nginx with pidfile /run/nginx.pid
+  start program = "/usr/sbin/service nginx start"
+  stop program  = "/usr/sbin/service nginx stop"
+  if failed port 80 protocol http then restart
+
+
+Example 2: Monitor Disk Usage
+
+check filesystem rootfs with path /
+    if space usage > 80% then alert
+
+
+Example 3: Monitor Memory/CPU
+
+check system $HOST
+    if memory usage > 90% then alert
+    if loadavg (1min) > 4 then alert
+
+
+Example 4: Email Alerts
+
+set mailserver smtp.gmail.com port 587
+    username "you@gmail.com" password "app-password"
+set alert you@gmail.com
+
+
+✅ So Monit:
+
+Monitors services (nginx, sshd, mysql)
+
+Restarts them if they fail
+
+Sends email alerts
+
+🔐 C. SSH Configuration
+
+All SSH settings live in /etc/ssh/sshd_config.
+
+🔸 1. Change SSH Port
+sudo nano /etc/ssh/sshd_config
+
+
+Change:
+
+Port 2222
+
+
+Then restart SSH:
+
+sudo systemctl restart ssh
+
+
+Now you connect like:
+
+ssh -p 2222 user@server
+
+🔸 2. Set SSH Login Banner
+
+Edit /etc/issue.net:
+
+Authorized access only! All actions are logged.
+
+
+Then in sshd_config:
+
+Banner /etc/issue.net
+
+🔸 3. Enable SSH Key Authentication
+
+Generate keys on client:
+
+ssh-keygen
+
+
+Copy to server:
+
+ssh-copy-id user@server
+
+
+Now login without password.
+
+🔸 4. Restrict SSH from Specific IPs
+
+In /etc/ssh/sshd_config:
+
+AllowUsers user@192.168.1.*
+DenyUsers user@*
+
+🔸 5. Disable Root Login
+PermitRootLogin no
+
+🔸 6. Limit Wrong Attempts
+MaxAuthTries 3
+
+
+Restart SSH:
+
+sudo systemctl restart ssh
+
+⚡ D. Rsync, Tar, Mount
+🔁 Rsync (for syncing files)
+rsync -avz /source/path user@server:/dest/path
+
+
+-a → archive mode
+
+-v → verbose
+
+-z → compression
+
+Example:
+
+rsync -avz /home/user/files/ root@192.168.1.10:/backup/
+
+📦 Tar (for archiving/compression)
+
+Create:
+
+tar -cvf backup.tar /path/to/folder
+
+
+Create + compress:
+
+tar -czvf backup.tar.gz /path/to/folder
+
+
+Extract:
+
+tar -xvzf backup.tar.gz
+
+💽 Mount (for attaching drives or ISO)
+
+Mount a drive:
+
+sudo mount /dev/sdb1 /mnt
+
+
+Unmount:
+
+sudo umount /mnt
+
+
+Mount ISO:
+
+sudo mount -o loop file.iso /mnt
+
+🕵️ E. Tshark & Wireshark Analysis
+1️⃣ Install Tshark
+sudo apt install tshark -y
+
+2️⃣ Capture Packets
+sudo tshark -i eth0 -c 100 -w capture.pcap
+
+
+-i eth0 = interface
+
+-c 100 = capture 100 packets
+
+-w = write to a file
+
+You’ll get a file like capture.pcap.
+
+3️⃣ Open in Wireshark (GUI Tool)
+
+Transfer file to your local system and open with Wireshark:
+
+wireshark capture.pcap
+
+
+Now you can analyze:
+
+HTTP requests/responses
+
+DNS lookups
+
+TCP handshakes
+
+Packet size, timing, IP source/destination
+
+Example:
+Filter for HTTP packets:
+
+http
+
+
+Filter for a specific IP:
+
+ip.addr == 192.168.1.10
+
+🧭 Final Summary
+Task	Tool/Command	Purpose
+Monitor & Auto-restart Services	Monit	Detect & fix failed services
+Check File Timestamps	stat, touch	View & set custom file dates
+Secure SSH	/etc/ssh/sshd_config	Change port, banner, disable root, limit attempts
+Sync Files	rsync	Fast transfer & backup
+Archive Data	tar	Compress or extract files
+Mount Drives/ISOs	mount	Attach or unmount devices
+Packet Capture & Analysis	tshark, wireshark	Capture and inspect network traffic
+
+🔥 Perfect — welcome to your **first real DevOps Mini Project Lab** 🧠💻
+We’re going to do everything *practically*, just like a real Linux admin or DevOps engineer on a live server.
+
+This will combine everything you mentioned — **Monit, SSH security, rsync, tar, mount, tshark, and stat** — step-by-step.
+You can do this easily on your own **Ubuntu Server VM or WSL**.
+
+---
+
+# 🧱 **DEVOPS PRACTICAL LAB — LEVEL 1**
+
+## 🧰 Prerequisites
+
+* Ubuntu (Server or Desktop or WSL)
+* Internet access
+* `sudo` privileges
+
+---
+
+## 🧩 PART 1 — File Monitoring & Timestamp
+
+### 🪶 Step 1: Create file and view details
+
+```bash
+touch report.txt
+stat report.txt
+```
+
+### 🕰 Step 2: Change modification date (simulate old logs)
+
+```bash
+touch -t 202301011230 report.txt
+stat report.txt
+```
+
+✅ You’ve now created a file with a custom (old) date.
+
+---
+
+## ⚙️ PART 2 — Install and Configure Monit
+
+### Step 1: Install
+
+```bash
+sudo apt update
+sudo apt install monit -y
+```
+
+### Step 2: Enable and start Monit
+
+```bash
+sudo systemctl enable monit
+sudo systemctl start monit
+sudo systemctl status monit
+```
+
+### Step 3: Enable web interface
+
+```bash
+sudo nano /etc/monit/monitrc
+```
+
+Uncomment:
+
+```
+set httpd port 2812 and
+    use address localhost
+    allow localhost
+```
+
+### Step 4: Restart Monit
+
+```bash
+sudo systemctl restart monit
+```
+
+### Step 5: Open in browser
+
+👉 `http://localhost:2812`
+
+---
+
+### Step 6: Add a Service Check (like Nginx)
+
+```bash
+sudo apt install nginx -y
+sudo nano /etc/monit/conf.d/nginx
+```
+
+Paste:
+
+```bash
+check process nginx with pidfile /run/nginx.pid
+    start program = "/usr/sbin/service nginx start"
+    stop program  = "/usr/sbin/service nginx stop"
+    if failed port 80 protocol http then restart
+```
+
+Then reload:
+
+```bash
+sudo monit reload
+sudo monit summary
+```
+
+✅ Now Monit will restart Nginx automatically if it goes down.
+
+---
+
+## 🔐 PART 3 — SSH Security Configuration
+
+### Step 1: Change SSH port
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+Change:
+
+```
+Port 2222
+```
+
+Then:
+
+```bash
+sudo systemctl restart ssh
+```
+
+Login using:
+
+```bash
+ssh -p 2222 user@server_ip
+```
+
+---
+
+### Step 2: Add a Banner
+
+```bash
+echo "Authorized access only! Actions are logged." | sudo tee /etc/issue.net
+sudo nano /etc/ssh/sshd_config
+```
+
+Add:
+
+```
+Banner /etc/issue.net
+```
+
+Restart SSH:
+
+```bash
+sudo systemctl restart ssh
+```
+
+---
+
+### Step 3: Disable Root Login
+
+In `/etc/ssh/sshd_config`:
+
+```
+PermitRootLogin no
+```
+
+---
+
+### Step 4: Limit Login Attempts
+
+```
+MaxAuthTries 3
+```
+
+Restart:
+
+```bash
+sudo systemctl restart ssh
+```
+
+---
+
+### Step 5: Key-based Login (Passwordless SSH)
+
+On **client machine**:
+
+```bash
+ssh-keygen
+ssh-copy-id user@server_ip
+```
+
+Now test:
+
+```bash
+ssh user@server_ip
+```
+
+✅ No password needed!
+
+---
+
+## 🔁 PART 4 — Rsync, Tar, Mount Practice
+
+### A. Rsync File Backup
+
+```bash
+rsync -avz /etc/ root@server2:/backup/
+```
+
+(Replace `server2` with another server IP or local path)
+
+### B. Tar Archive
+
+```bash
+tar -czvf backup.tar.gz /var/log/
+ls -lh backup.tar.gz
+```
+
+### C. Mount ISO
+
+```bash
+sudo mkdir /mnt/iso
+sudo mount -o loop /path/to/file.iso /mnt/iso
+ls /mnt/iso
+sudo umount /mnt/iso
+```
+
+---
+
+## 🧠 PART 5 — Tshark & Wireshark
+
+### Step 1: Install Tshark
+
+```bash
+sudo apt install tshark -y
+```
+
+### Step 2: List Interfaces
+
+```bash
+tshark -D
+```
+
+### Step 3: Capture Packets
+
+```bash
+sudo tshark -i eth0 -c 100 -w capture.pcap
+```
+
+### Step 4: Analyze in Wireshark (GUI)
+
+Transfer file to your PC and open:
+
+```
+wireshark capture.pcap
+```
+
+Filters:
+
+* HTTP traffic → `http`
+* TCP only → `tcp`
+* IP filter → `ip.addr == 192.168.1.5`
+
+✅ You’ll see detailed packet info (source, destination, timing, protocol, payload).
+
+---
+
+## 🧾 PART 6 — Bonus: Email Alert in Monit
+
+Add this to `/etc/monit/monitrc`:
+
+```bash
+set mailserver smtp.gmail.com port 587
+    username "your@gmail.com" password "your-app-password"
+set alert your@gmail.com
+```
+
+Now Monit will send email alerts when something fails.
+
+---
+
+## 🚀 LAB SUMMARY
+
+| Topic              | Tool/Command          | What You Learned                     |
+| ------------------ | --------------------- | ------------------------------------ |
+| File timestamps    | `stat`, `touch -t`    | Change file modification time        |
+| Service monitoring | `monit`               | Auto-restart and web dashboard       |
+| SSH hardening      | `sshd_config`         | Secure login, banner, key-based auth |
+| File sync          | `rsync`               | Transfer/backup efficiently          |
+| Archiving          | `tar`                 | Compress and extract                 |
+| Mounting           | `mount`, `umount`     | Attach disks or ISOs                 |
+| Packet capture     | `tshark`, `wireshark` | Analyze network traffic visually     |
+
+---
 
