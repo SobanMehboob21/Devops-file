@@ -1512,3 +1512,191 @@ Now Monit will send email alerts when something fails.
 
 ---
 
+c.	Keyless/password less ssh between servers.
+d.	ssh configuration (port change, banner change, key enablement, restriction from IPs, enable/disable root logins, max login wrong attempts)
+e.	rsyncs, tar, mount
+f.	Install tshark, capture some packets of request/response and analyze them in on Wireshark.
+
+Linux Server & Networking Operations Guide
+C. Keyless / Password-less SSH Between Servers
+
+Purpose: Enable one server to connect to another without typing a password, usually for automation or syncing files.
+
+Step 1: Generate SSH Key on Source Server
+
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+
+-t rsa → type of key
+
+-b 4096 → key length (strong)
+
+Press Enter to accept default location /home/user/.ssh/id_rsa
+
+Leave passphrase empty for fully automated login
+
+Step 2: Copy Public Key to Destination Server
+
+ssh-copy-id user@destination_server_ip
+
+
+Alternative manual method:
+
+cat ~/.ssh/id_rsa.pub | ssh user@destination_server_ip "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+
+Step 3: Test Password-less Login
+
+ssh user@destination_server_ip
+
+
+Should log in without prompting for password.
+
+Security Tip: Set proper permissions on destination:
+
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+D. SSH Configuration
+
+Location: /etc/ssh/sshd_config
+
+1. Change SSH Port
+# Edit SSH config
+Port 2222
+
+
+Avoid default 22 to reduce brute-force attacks.
+
+Restart SSH:
+
+sudo systemctl restart ssh
+
+2. Add Banner
+Banner /etc/issue.net
+
+
+Create /etc/issue.net with warning message:
+
+Authorized access only! All actions are monitored.
+
+3. Enable Key-based Authentication
+PubkeyAuthentication yes
+PasswordAuthentication no
+
+
+Restart SSH service:
+
+sudo systemctl restart ssh
+
+4. Restrict SSH Access to Specific IPs
+# Allow only a specific IP
+AllowUsers user@192.168.1.10
+
+5. Disable Root Login
+PermitRootLogin no
+
+
+Recommended to use a normal user with sudo privileges.
+
+6. Limit Maximum Wrong Login Attempts
+MaxAuthTries 3
+
+
+Adds protection against brute-force attacks.
+
+E. Rsync, Tar, Mount
+1. Rsync – Sync/Backup Files Between Servers
+# Basic usage
+rsync -avz /local/folder/ user@remote_server:/remote/folder/
+
+# Explanation:
+# -a : archive mode (preserves permissions, symlinks)
+# -v : verbose
+# -z : compress during transfer
+
+2. Tar – Archive and Compress Files
+# Create archive
+tar -czvf backup.tar.gz /var/log/
+
+# Extract archive
+tar -xzvf backup.tar.gz
+
+
+Flags:
+
+Flag	Meaning
+c	create archive
+x	extract archive
+z	gzip compression
+v	verbose output
+f	filename
+3. Mount – Attach Storage or ISO
+# Mount ISO
+sudo mount -o loop file.iso /mnt
+
+# Unmount
+sudo umount /mnt
+
+
+Mount partitions:
+
+sudo mount /dev/sdb1 /mnt
+
+
+Check mounts:
+
+df -h
+mount | grep /mnt
+
+F. Tshark & Wireshark – Packet Capture and Analysis
+
+Step 1: Install Tshark
+
+sudo apt update
+sudo apt install tshark -y
+
+
+Step 2: Capture Packets
+
+sudo tshark -i eth0 -c 100 -w capture.pcap
+
+
+-i eth0 → interface to capture
+
+-c 100 → capture 100 packets
+
+-w capture.pcap → write to file
+
+Step 3: Open Capture in Wireshark
+
+wireshark capture.pcap
+
+
+Analyze traffic visually: filter by protocol, IP, port
+
+Useful Filters in Wireshark:
+
+Filter	Meaning
+http	Only HTTP traffic
+tcp	Only TCP traffic
+ip.addr == 192.168.1.5	Packets to/from this IP
+tcp.port == 80	Packets on port 80
+✅ Summary Table
+Task	Command / File	Purpose
+Keyless SSH	ssh-keygen + ssh-copy-id	Passwordless login between servers
+SSH Config	/etc/ssh/sshd_config	Secure SSH (port, banner, keys, root, max login)
+Rsync	rsync -avz	File sync/backup
+Tar	tar -czvf / tar -xzvf	Archive & compress files
+Mount	mount /dev/sdb1 /mnt	Attach disks or ISOs
+Packet Capture	tshark -i eth0 -w file.pcap	Capture network traffic
+Analyze Packets	Wireshark	Inspect requests/responses visually
+
+
+
+
+
+
+
+
+
