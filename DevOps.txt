@@ -1,4 +1,4 @@
-https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
+\https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
 
 everything relted to network interface is in above lin
 Network Interface?
@@ -63,7 +63,725 @@ wlp2s0		Wi-Fi		wl = Wireless LAN, p2 = PCI bus 2, s0 = slot 0
 so they never change when you restart or plug new devices.
 
 
+------------------------------------------------------------
+https://www.baeldung.com/linux/network-interface-configure#:~:text=To%20clarify%2C%20%2Fetc%2Fnetwork,interface%20either%20statically%20or%20dynamically
 
+.
+.
+..
+.
+
+
+--- vim 30 commands main r downloaded
+
+
+
+.
+..
+
+
+
+sudo nano /etc/network/interfaces
+
+everything relted to network interface is in above lin
+Network Interface?
+a network interface is the point of connection between a computer and a network
+
+A network interface is just a connection point between your computer (or server) and a network (like the internet or a local network).
+
+Interface	What it means        	 	Example name in Linux
+🧵 Ethernet	Wired connection		    eth0, enp0s3
+📶 Wi-Fi	        Wireless connection	             		   wlan0
+🔁 Loopback	Internal (connects to itself)		lo
+🌐 Virtual	Used by virtual machines or Docker	docker0, veth1234
+
+
+
+ 1. Old Style (Classic names)
+
+Old Linux systems (before 2015) used short, easy names:
+
+Type	              Example name			Meaning
+Ethernet (wired)	eth0, eth1, eth2	First, second, third Ethernet port
+Wi-Fi (wireless)	wlan0, wlan1		First, second wireless card
+Loopback	 	lo		Always the internal “self” connection
+
+Example:
+If you plugged in two Ethernet cables, Linux would name them eth0 and eth1.
+
+✅ Simple, but...
+❌ Sometimes names changed randomly after reboot or hardware change — which caused server problems.
+
+
+
+
+2. New Style (Predictable names)
+
+To fix that, Linux introduced Predictable Network Interface Names around 2015.
+
+These names describe where the hardware is physically connected on the motherboard.
+
+Examples:
+
+New Name	Type			Meaning
+enp3s0	 	Ethernet	en = Ethernet, p3 = PCI bus 3, s0 = slot 0
+ens33		Ethernet	Ethernet, slot 33
+wlp2s0		Wi-Fi		wl = Wireless LAN, p2 = PCI bus 2, s0 = slot 0
+
+🧠 These names come from hardware location, not boot order —
+so they never change when you restart or plug new devices.
+
+
+--------
+
+NETWORK INTERFACE CARD
+
+ ls command and the sys file system to quickly list the available network
+ interfaces. Each entry in the /sys/class/net directory represents a physical or virtual network interface:
+
+ ls /sys/class/net
+
+To get more details about the network interfaces. we can use the
+ ip link command:
+Here, we can see three network interfaces, their type, and their state.
+ Alternatively, we can also use the ifconfig command.
+
+In addition, to get the IP address and other related information, we use  the ip addr command:
+
+You can open it with:
+
+sudo nano /etc/network/interfaces
+
+man ip link
+man ip
+man ip address
+ifquery
+
+
+-----
+
+What Is /etc/network/interfaces?
+
+It’s the file in Linux (especially Debian or older Ubuntu) that tells the system how to connect to the internet — which network card to use, what IP to give, and whether it’s static or dynamic.
+
+Think of it like a Wi-Fi settings file that loads automatically when your system starts.
+
+⚙️ Basic Syntax
+1. Start network interface automatically at boot:
+auto eth0
+
+
+💬 Means: "Start the Ethernet (eth0) connection automatically when the system boots."
+
+2. Define how a network interface behaves:
+iface <interface> <address_family> <method>
+
+
+Example:
+
+iface eth0 inet dhcp
+
+
+Meaning:
+
+iface → defines a network interface
+
+eth0 → the interface name (like your LAN cable)
+
+inet → IPv4 protocol
+
+dhcp → get IP automatically from the router
+
+🌐 Two Ways to Get IP
+🟢 1. Dynamic (Automatic) — DHCP
+
+Let the router assign IP automatically:
+
+auto eth0
+iface eth0 inet dhcp
+
+🔵 2. Static (Manual)
+
+You assign IP yourself:
+
+auto eth0
+iface eth0 inet static
+    address 192.168.1.100
+    netmask 255.255.255.0
+    gateway 192.168.1.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+
+
+💬 This means:
+
+Always use IP → 192.168.1.100
+
+Router (gateway) → 192.168.1.1
+
+Google DNS → 8.8.8.8, 8.8.4.4
+
+⚡ Special Options
+Option	Meaning
+pre-up <command>	Run this command before interface starts
+post-up <command>	Run this command after interface starts
+pre-down <command>	Run this command before interface stops
+post-down <command>	Run this command after interface stops
+
+Example:
+
+pre-up /usr/local/sbin/start-iptables.sh
+post-down /usr/local/sbin/backup-log.sh
+
+
+💬 Means run the firewall before connecting, and backup logs after disconnecting.
+
+🔁 Enable or Disable Interfaces Manually
+
+You can manually start or stop a network interface:
+
+sudo ifup eth0     # Turn ON the network
+sudo ifdown eth0   # Turn OFF the network
+
+
+After editing the file, apply changes by:
+
+sudo ifdown eth0 && sudo ifup eth0
+
+🧩 Full Example
+
+Here’s how a full static configuration looks:
+
+auto eth0
+iface eth0 inet static
+    address 192.168.1.100
+    netmask 255.255.255.0
+    gateway 192.168.1.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+pre-up /usr/local/sbin/start-iptables.sh
+post-down /usr/local/sbin/backup-log.sh
+
+🚫 Why Your /etc/network/interfaces File Might Be Empty
+
+If the file is empty — don’t panic 😄
+It usually means another tool is managing your network, like:
+
+NetworkManager (used on desktop Ubuntu)
+
+Netplan (used on newer Ubuntu versions)
+
+To use /etc/network/interfaces, you need to disable NetworkManager:
+
+sudo systemctl stop NetworkManager.service
+sudo systemctl disable NetworkManager.service
+
+
+----------
+
+sudo nana /etc/network/interface
+
+Step 2: Paste this content
+
+Paste your configuration (replace eth0 with your interface name — e.g. ens33 if that’s what your system uses):
+
+auto ens33
+iface ens33 inet static
+    address 192.168.1.100
+    netmask 255.255.255.0
+    gateway 192.168.1.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+pre-up /usr/local/sbin/start-iptables.sh
+post-down /usr/local/sbin/backup-log.sh
+
+🔹 Step 3: Save & Exit
+
+Press:
+
+CTRL + O → Enter → CTRL + X
+
+🔹 Step 4: Restart Networking
+
+To apply your new configuration, run:
+
+sudo ifdown ens33 && sudo ifup ens33
+
+
+or restart your network service:
+
+sudo systemctl restart networking
+
+/
+/
+/
+3.	GREP:
+a.	grep one number, multiple numbers, everything except one number
+b.	grep case sensitive/insensitive character 
+c.	grep specific files with patterns
+d.	use grep to look for files which contains the word for instance 'HTTP'
+e.	use grep to count numbers having prefix 0301,0302                                         
+f.	grep two lines of trailing context after each match                                            
+g.	grep two lines of leading context before each match                                        
+h.	grep two lines of leading and trailing context surrounding each match   
+i.	grep regex matching (just study it to how know)
+
+
+What is grep?
+
+grep is used to search for text patterns inside files or output.
+It shows lines that match what you’re looking for.
+
+Example:
+
+grep "error" /var/log/syslog
+
+
+👉 Finds all lines containing the word “error” in the syslog file.
+
+🔹 a. grep one number, multiple numbers, everything except one number
+
+Let’s say we have a file called numbers.txt like:
+
+0301
+0302
+0303
+0401
+0502
+
+👉 Find one number (e.g., 0301):
+grep "0301" numbers.txt
+
+👉 Find multiple numbers (e.g., 0301 or 0302):
+grep -E "0301|0302" numbers.txt
+
+
+(-E enables extended regex for “OR” patterns.)
+
+👉 Find everything except one number (e.g., not 0301):
+grep -v "0301" numbers.txt
+
+
+(-v = inverse match → exclude pattern)
+
+🔹 b. grep case sensitive / insensitive
+
+Suppose you have:
+
+HTTP
+http
+Https
+
+Case sensitive (default)
+grep "HTTP" file.txt
+
+
+→ Only matches HTTP (uppercase).
+
+Case insensitive
+grep -i "http" file.txt
+
+
+→ Matches HTTP, http, and Https.
+
+🔹 c. grep specific files with patterns
+
+Search for a pattern in specific files:
+
+grep "root" /etc/passwd
+
+
+Search inside multiple files:
+
+grep "error" *.log
+
+
+Search recursively in a directory:
+
+grep -r "error" /var/log
+
+🔹 d. use grep to look for files containing a word (e.g. “HTTP”)
+
+You can search inside all files:
+
+grep -rl "HTTP" /etc
+
+
+-r → recursive
+
+-l → list only filenames that contain the word
+
+🔹 e. use grep to count numbers having prefix 0301, 0302
+grep -E "0301|0302" numbers.txt | wc -l
+
+
+-E → extended regex for OR patterns
+
+wc -l → counts number of matching lines
+
+🔹 f. grep two lines of trailing context after each match
+
+If your file has:
+
+Line1
+Error
+Line2
+Line3
+
+
+and you run:
+
+grep -A 2 "Error" logfile.txt
+
+
+-A (After) shows 2 lines after the match:
+
+Error
+Line2
+Line3
+
+🔹 g. grep two lines of leading context before each match
+grep -B 2 "Error" logfile.txt
+
+
+-B (Before) shows 2 lines before the match:
+
+Line1
+Error
+
+🔹 h. grep two lines of leading and trailing context
+grep -C 2 "Error" logfile.txt
+
+
+-C (Context) = 2 lines before and after each match.
+
+🔹 i. grep regex matching (just study it)
+
+Regular expressions (regex) allow advanced searching — patterns instead of plain text.
+
+Examples:
+
+grep -E "^[0-9]{4}$" numbers.txt
+
+
+→ matches exactly 4 digits
+
+grep -E "^[A-Z]+" file.txt
+
+
+→ matches lines starting with uppercase letters
+
+✅ Summary Table
+Option	Meaning	Example
+-i	Ignore case	grep -i "http" file
+-v	Invert match	grep -v "0301" file
+-r	Recursive search	grep -r "error" /etc
+-l	Show only filenames	grep -l "HTTP" /etc
+-A N	Show N lines after	grep -A 2 "error" log
+-B N	Show N lines before	grep -B 2 "error" log
+-C N	Show N lines around	grep -C 2 "error" log
+
+------------------------------------------
+
+4.	VIM:
+a.	copy pasting, syntaxing, search and replace and etc.
+b.	search a number in file
+c.	replace 92 from start of every number                     
+d.	replace 0 from start of every number with 921     
+e.	add "Ufone" at the end of every number                 
+f.	add "Ufone" at the start of every number     
+
+
+Mode	What it does	How to enter
+Normal Mode	Move, copy, delete, search	Press Esc
+Insert Mode	Type or edit text	Press i
+Command Mode	Run commands like save, replace, quit	Press :
+⚙️ a. Copy, Paste, Search, Replace, etc.
+Copy (Yank)
+
+yy → copy (yank) one line
+
+2yy → copy two lines
+
+yG → copy from current line to end of file
+
+Paste
+
+p → paste below
+
+P → paste above
+
+Cut (Delete)
+
+dd → delete (cut) one line
+
+2dd → delete two lines
+
+Undo / Redo
+
+u → undo
+
+Ctrl + r → redo
+
+Search for Text
+
+/word → search forward for “word”
+
+n → next match
+
+N → previous match
+
+Replace Text
+
+:%s/old/new/g → replace all “old” with “new”
+
+:%s/old/new/gc → same but asks for confirmation each time
+
+🔢 b. Search a Number in File
+
+In Vim (Normal mode), type:
+
+/[0-9]
+
+
+→ searches for any number.
+You can press n to jump to the next one.
+
+If you want to find specific numbers (like 0301):
+
+/0301
+
+🔁 c. Replace 92 from Start of Every Number
+
+Let’s say you have:
+
+9234567
+9201111
+9233333
+0301333
+
+
+Command:
+
+:%s/^92//
+
+
+Explanation:
+
+% → entire file
+
+s → substitute
+
+^92 → means “92 at the start of a line”
+
+// → replace with nothing (remove it)
+
+Result:
+
+34567
+01111
+33333
+0301333
+
+🔁 d. Replace 0 from Start of Every Number with 921
+
+If you have:
+
+0301
+0302
+0303
+
+
+Command:
+
+:%s/^0/921/
+
+
+Explanation:
+
+^0 → means “0 at start of line”
+
+921 → the replacement text
+
+Result:
+
+921301
+921302
+921303
+
+🏷️ e. Add “Ufone” at the End of Every Number
+
+Command:
+
+:%s/$/ Ufone/
+
+
+Explanation:
+
+$ → end of line
+
+Adds " Ufone" at the end of each line
+
+Result:
+
+921301 Ufone
+921302 Ufone
+921303 Ufone
+
+🏷️ f. Add “Ufone” at the Start of Every Number
+
+Command:
+
+:%s/^/Ufone /
+
+
+Explanation:
+
+^ → start of line
+
+Adds "Ufone " before each line
+
+Result:
+
+Ufone 921301
+Ufone 921302
+Ufone 921303
+
+🧩 Bonus Tips
+Action	Command
+Save	:w
+Quit	:q
+Save + Quit	:wq
+Quit without saving	:q!
+Show line numbers	:set number
+Go to line 10	:10
+Select multiple lines	V + move down
+
+------------------------------
+
+
+	GREP: VIM: AWK: SED
+a.	delete all numbers starting from 92, replace end line character with anything else etc etc.
+b.	Count of lines this file contains
+c.	Each line starts with datetime then log type, count 'Sent SMS' logs.
+d.	Get output which contains the first 10 'Sent SMS' logs on terminal.  
+e.	Get output which contains the first 25 'Sent SMS' logs on terminal.  
+f.	Get output which contains the last 15 'Sent SMS' logs on terminal.  
+g.	Sort out the details on terminal from 'Sent SMS' logs in such format:"date time, Source_Mask, Destination, Message Length"
+
+
+et’s assume you have a log file named logs.txt containing lines like 👇
+
+2025-10-22 10:15:32 INFO Sent SMS Source_Mask=92300 Destination=923111111111 Length=150
+2025-10-22 10:15:33 INFO Sent SMS Source_Mask=92301 Destination=923222222222 Length=140
+2025-10-22 10:15:34 WARN Failed to send SMS Source_Mask=92302 Destination=923333333333
+2025-10-22 10:15:35 INFO Sent SMS Source_Mask=92303 Destination=923444444444 Length=130
+
+
+We’ll use this file to practice each command.
+
+🧹 a. Delete all numbers starting from 92, replace end line character with anything else, etc.
+Using sed:
+Delete numbers starting with 92:
+sed 's/92[0-9]*//g' logs.txt
+
+
+Explanation:
+
+s/old/new/g → substitute globally
+
+92[0-9]* → match 92 followed by any digits
+
+// → replace with nothing (delete)
+
+Result example:
+
+2025-10-22 10:15:32 INFO Sent SMS Source_Mask= Destination= Length=150
+
+Replace end-of-line character $ with something (like “#”):
+sed 's/$/#/' logs.txt
+
+
+→ adds a # at the end of each line.
+
+🔢 b. Count of lines this file contains
+Using wc:
+wc -l logs.txt
+
+
+→ shows total number of lines in file.
+
+OR using grep:
+grep -c "" logs.txt
+
+
+→ counts all lines (since every line matches the empty string).
+
+📨 c. Each line starts with datetime then log type — count ‘Sent SMS’ logs
+Using grep:
+grep -c "Sent SMS" logs.txt
+
+
+→ shows how many lines contain the words “Sent SMS”.
+
+Using awk:
+awk '/Sent SMS/ {count++} END {print count}' logs.txt
+
+
+→ counts using AWK script.
+
+🔟 d. Show first 10 “Sent SMS” logs on terminal
+grep "Sent SMS" logs.txt | head -n 10
+
+
+Explanation:
+
+grep filters the lines containing “Sent SMS”
+
+head -n 10 shows only the first 10
+
+2️⃣5️⃣ e. Show first 25 “Sent SMS” logs
+grep "Sent SMS" logs.txt | head -n 25
+
+🔚 f. Show last 15 “Sent SMS” logs
+grep "Sent SMS" logs.txt | tail -n 15
+
+📊 g. Sort and extract formatted data:
+
+“date time, Source_Mask, Destination, Message Length”
+
+Use awk (powerful log parser):
+
+grep "Sent SMS" logs.txt | awk '{ 
+    date=$1; 
+    time=$2; 
+    split($0,a," "); 
+    for(i=1;i<=NF;i++){
+        if($i ~ /Source_Mask=/) sm=substr($i,13);
+        if($i ~ /Destination=/) dst=substr($i,13);
+        if($i ~ /Length=/) len=substr($i,8);
+    } 
+    print date, time ",", sm ",", dst ",", len 
+}'
+
+
+Output:
+
+2025-10-22 10:15:32 , 92300 , 923111111111 , 150
+2025-10-22 10:15:33 , 92301 , 923222222222 , 140
+2025-10-22 10:15:35 , 92303 , 923444444444 , 130
+
+🧠 BONUS: Summary Table
+Task	Command	Tool
+Delete “92” numbers	sed 's/92[0-9]*//g' logs.txt	sed
+Add character at end	sed 's/$/#/' logs.txt	sed
+Count total lines	wc -l logs.txt	wc
+Count “Sent SMS”	grep -c "Sent SMS" logs.txt	grep
+Show first 10 logs	grep "Sent SMS" logs.txt | head -n 10	grep + head
+Show last 15 logs	grep "Sent SMS" logs.txt | tail -n 15	grep + tail
+Extract structured fields	complex awk command	awk
+
+
+
+
+\\\
 
 
 
